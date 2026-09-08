@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staal Spelling Oefenplatform</title>
+    <style>
+        :root {
+            --staal-blue: #009fe3;
+            --staal-dark: #333333;
+            --staal-gray: #eceff1;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Arial', sans-serif;
+        }
+
+        body {
+            background-color: var(--staal-blue);
+            margin: 0;
+            padding: 10px;
+            color: var(--staal-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 15px;
+            padding: 20px;
+            width: 100%;
+            max-width: 1200px;
+            height: 95vh;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            color: var(--staal-blue);
+            margin: 0 0 10px 0;
+            font-size: 28px;
+        }
+
+        .screen { display: none; height: 100%; }
+        .screen.active { display: block; }
+
+        #screen-intake {
+            text-align: center;
+            padding-top: 10vh;
+        }
+
+        input, select {
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            margin: 8px 0;
+            width: 100%;
+            max-width: 300px;
+            text-align: center;
+        }
+
+        button {
+            background-color: #ffcc00;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+            box-shadow: 0 4px 0 #cc9900;
+            transition: all 0.1s;
+        }
+
+        button:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        .audio-btn {
+            background-color: #4caf50;
+            box-shadow: 0 4px 0 #388e3c;
+            color: white;
+            font-size: 20px;
+            padding: 12px 25px;
+        }
+
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            background: var(--staal-gray);
+            padding: 8px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .game-layout {
+            display: flex;
+            gap: 20px;
+            height: calc(100 winners - 55px);
+            height: calc(100% - 55px);
+        }
+
+        .left-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            overflow-y: auto;
+        }
+
+        .right-column {
+            flex: 1.5;
+            background-color: var(--staal-blue);
+            padding: 15px;
+            border-radius: 12px;
+            overflow-y: auto;
+            height: 100%;
+        }
+
+        .game-layout p {
+            margin: 5px 0;
+            font-size: 15px;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 10px;
+        }
+
+        .cat-card {
+            background-color: white;
+            border: 3px solid transparent;
+            border-radius: 8px;
+            padding: 8px 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+            transition: all 0.15s ease;
+            min-height: 130px;
+        }
+
+        .cat-card .cat-number {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--staal-blue);
+            background-color: var(--staal-gray);
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 3px;
+        }
+
+        .cat-sprite {
+            width: 60px;
+            height: 60px;
+            background-repeat: no-repeat;
+            margin: 2px auto;
+            border-radius: 4px;
+        }
+
+        .cat-card .cat-name {
+            font-size: 11px;
+            font-weight: bold;
+            line-height: 1.2;
+            color: var(--staal-dark);
+        }
+
+        .cat-card.selected {
+            border-color: #ffcc00;
+            background-color: #fffde7;
+            transform: scale(1.03);
+        }
+
+        .cat-card.selected .cat-number {
+            background-color: #ffcc00;
+            color: white;
+        }
+
+        .word-display {
+            font-size: 32px;
+            letter-spacing: 2px;
+            font-weight: bold;
+            margin: 10px 0;
+            color: var(--staal-blue);
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            display: none;
+            text-align: left;
+            width: 100%;
+            font-size: 14px;
+        }
+        .feedback.correct { background-color: #d4edda; color: #155724; display: block; text-align: center; }
+        .feedback.wrong { background-color: #f8d7da; color: #721c24; display: block; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- SCHERM 1: INTAKE -->
+    <div id="screen-intake" class="screen active">
+        <h1>Staal Spellingsoefenaar 🚀</h1>
+        <p>Vul je gegevens in om te starten met oefenen!</p>
+        <input type="text" id="student-name" placeholder="Wat is je naam?" required><br>
+        
+        <select id="student-group">
+            <option value="4">Groep 4 (Categorie 1 t/m 12)</option>
+            <option value="5">Groep 5 (Categorie 1 t/m 19)</option>
+            <option value="6">Groep 6 (Categorie 1 t/m 28)</option>
+        </select><br>
+
+        <select id="game-mode">
+            <option value="oefen">Oefenmodus (Woord zien)</option>
+            <option value="dictee">Dicteemodus (Woord horen)</option>
+        </select><br>
+        
+        <button onclick="startSpel()">Start het spel! 🏁</button>
+    </div>
+
+    <!-- SCHERM 2: HET SPEL -->
+    <div id="screen-game" class="screen">
+        <div class="header-bar">
+            <span id="display-name">Naam</span>
+            <span id="display-group">Groep</span>
+            <span>Punten: <span id="display-score">0</span></span>
+            <span>Sterren: <span id="display-stars">⭐ 0</span></span>
+        </div>
+
+        <div class="game-layout">
+            
+            <!-- Linker Kolom: Invoer & Vragen -->
+            <div class="left-column">
+                <!-- Dictee Bediening -->
+                <div id="dictee-controls" style="display: none; text-align: center;">
+                    <button class="audio-btn" onclick="spreekWoordUit()">🗣️ Luister</button>
+                    <p>Typ het woord dat je hoort:</p>
+                    <input type="text" id="input-word" placeholder="Typ hier het hele woord..." autocomplete="off">
+                </div>
+
+                <!-- Oefenmodus Bediening -->
+                <div id="oefen-controls" style="display: none; text-align: center;">
+                    <p>Kijk goed naar het woord:</p>
+                    <div id="show-word" class="word-display">woord</div>
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid #ccc; width: 100%; margin: 15px 0;">
+
+                <p><strong>Stap 2:</strong> Hak het woord in klankgroepen (gebruik streepjes, bijv: <strong>bak-ker</strong>):</p>
+                <input type="text" id="input-syllables" placeholder="klank-groe-pen..." autocomplete="off">
+
+                <button id="check-btn" onclick="controleerAntwoord()">Controleer Antwoord! ✔️</button>
+                <button id="next-btn" onclick="volgendWoord()" style="display:none; background-color: #4caf50; box-shadow: 0 4px 0 #388e3c; color: white;">Volgend woord ➡️</button>
+
+                <div id="feedback-box" class="feedback"></div>
+            </div>
+
+            <!-- Rechter Kolom: Categoriekaart -->
+            <div class="right-column">
+                <p style="color: white; font-weight: bold; margin-bottom: 10px; text-align: center;">
+                    <strong>Stap 1:</strong> Klik op de spellingscategorieën die bij dit woord horen:
+                </p>
+                <div id="category-container" class="category-grid"></div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
