@@ -17,7 +17,7 @@ const staalCategorieMapping = {
 
 // Functie die de exacte CSS-achtergrondpositie berekent uit de Heutink-afbeelding
 function getSpriteStyle(num) {
-    const imgUrl = "https://heutink.nl";
+    const imgUrl = "categoriekaart.webp";
     let left, top, width, height;
 
     if (num <= 19) {
