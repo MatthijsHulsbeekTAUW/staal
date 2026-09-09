@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Staal Spelling Oefenplatform</title>
-    <!-- Koppel het externe CSS-bestand -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,14 +16,24 @@
         <input type="text" id="student-name" placeholder="Wat is je naam?" required><br>
         
         <select id="student-group">
-            <option value="4">Groep 4 (Categorie 1 t/m 12)</option>
-            <option value="5">Groep 5 (Categorie 1 t/m 19)</option>
-            <option value="6">Groep 6 (Categorie 1 t/m 28)</option>
+            <option value="4">Groep 4 (Max Categorie 12)</option>
+            <option value="5">Groep 5 (Max Categorie 19)</option>
+            <option value="6">Groep 6 (Max Categorie 28)</option>
+        </select><br>
+
+        <select id="student-block">
+            <option value="1">Blok 1</option>
+            <option value="2">Blok 2</option>
+            <option value="3">Blok 3</option>
+            <option value="4">Blok 4</option>
+            <option value="5">Blok 5</option>
+            <option value="6">Blok 6</option>
+            <option value="7">Blok 7</option>
+            <option value="8">Blok 8 (Hele jaar)</option>
         </select><br>
 
         <select id="game-mode">
-            <option value="oefen">Oefenmodus (Woord zien)</option>
-            <option value="dictee">Dicteemodus (Woord horen)</option>
+            <option value="oefen">Oefenmodus (Interactief Hakken)</option>
         </select><br>
         
         <button onclick="startSpel()">Start het spel! 🏁</button>
@@ -37,86 +46,52 @@
     <!-- SCHERM 2: HET SPEL -->
     <div id="screen-game" class="screen">
         <div class="header-bar">
-            <span id="display-name">Naam</span>
-            <span id="display-group">Groep</span>
-            <span>Woord: <span id="display-word-count">1/20</span></span>
-            <span>Punten: <span id="display-score">0</span></span>
-            <span>Sterren: <span id="display-stars">⭐ 0</span></span>
+            <div class="header-left">
+                <span id="display-name">Naam</span> | 
+                <span id="display-group">Groep</span> | 
+                <span id="display-block">Blok</span>
+            </div>
+            <div class="header-right">
+                <span>Woord: <span id="display-word-count">1/20</span></span> | 
+                <span>Punten: <span id="display-score">0</span></span> | 
+                <span>Sterren: <span id="display-stars">⭐ 0</span></span>
+            </div>
         </div>
 
-        <div class="game-layout">
+        <div class="game-layout-horizontal">
             
-            <!-- Linker Kolom: Invoer & Vragen -->
-            <div class="left-column">
-                <!-- Dictee Bediening -->
-                <div id="dictee-controls" style="display: none; text-align: center; width:100%;">
-                    <button class="audio-btn" onclick="spreekWoordUit()">🗣️ Luister</button>
-                    <p>Typ het woord dat je hoort:</p>
-                    <input type="text" id="input-word" placeholder="Tik hier om te typen..." readonly>
-                </div>
-
-                <!-- Oefenmodus Bediening -->
-                <div id="oefen-controls" style="display: none; text-align: center;">
-                    <p>Kijk goed naar het woord:</p>
-                    <div id="show-word" class="word-display">woord</div>
-                </div>
-
-                <hr style="border: 0; border-top: 1px solid #ccc; width: 100%; margin: 10px 0;">
-
-                <p><strong>Stap 2:</strong> Hak het woord in klankgroepen (gebruik streepjes, bijv: <strong>bak-ker</strong>):</p>
-                <input type="text" id="input-syllables" placeholder="Tik hier om te hakken..." readonly>
-
-                <button id="check-btn" onclick="controleerAntwoord()">Controleer Antwoord! ✔️</button>
-                <button id="next-btn" onclick="volgendWoord()" style="display:none; background-color: #4caf50; box-shadow: 0 4px 0 #388e3c; color: white;">Volgend woord ➡️</button>
-
-                <!-- INTERN TOETSENBORD -->
-                <div class="keyboard-container" id="custom-keyboard">
-                    <div class="keyboard-row">
-                        <button class="key" onclick="pressKey('q')">q</button>
-                        <button class="key" onclick="pressKey('w')">w</button>
-                        <button class="key" onclick="pressKey('e')">e</button>
-                        <button class="key" onclick="pressKey('r')">r</button>
-                        <button class="key" onclick="pressKey('t')">t</button>
-                        <button class="key" onclick="pressKey('y')">y</button>
-                        <button class="key" onclick="pressKey('u')">u</button>
-                        <button class="key" onclick="pressKey('i')">i</button>
-                        <button class="key" onclick="pressKey('o')">o</button>
-                        <button class="key" onclick="pressKey('p')">p</button>
-                    </div>
-                    <div class="keyboard-row">
-                        <button class="key" onclick="pressKey('a')">a</button>
-                        <button class="key" onclick="pressKey('s')">s</button>
-                        <button class="key" onclick="pressKey('d')">d</button>
-                        <button class="key" onclick="pressKey('f')">f</button>
-                        <button class="key" onclick="pressKey('g')">g</button>
-                        <button class="key" onclick="pressKey('h')">h</button>
-                        <button class="key" onclick="pressKey('j')">j</button>
-                        <button class="key" onclick="pressKey('k')">k</button>
-                        <button class="key" onclick="pressKey('l')">l</button>
-                        <button class="key" onclick="pressKey('-')">-</button>
-                    </div>
-                    <div class="keyboard-row">
-                        <button class="key" onclick="pressKey('z')">z</button>
-                        <button class="key" onclick="pressKey('x')">x</button>
-                        <button class="key" onclick="pressKey('c')">c</button>
-                        <button class="key" onclick="pressKey('v')">v</button>
-                        <button class="key" onclick="pressKey('b')">b</button>
-                        <button class="key" onclick="pressKey('n')">n</button>
-                        <button class="key" onclick="pressKey('m')">m</button>
-                        <button class="key" onclick="pressKey('\'')">'</button>
-                        <button class="key wide" onclick="pressKey('backspace')">⌫ Wis</button>
-                    </div>
-                </div>
-
-                <div id="feedback-box" class="feedback"></div>
+            <div class="instruction-banner" id="current-instruction">
+                Stap 1: Is dit een samenstelling? Klik dan onderaan op de ster!
             </div>
 
-            <!-- Rechter Kolom: Categoriekaart -->
-            <div class="right-column">
-                <p style="color: white; font-weight: bold; margin-bottom: 10px; text-align: center;">
-                    <strong>Stap 1:</strong> Klik op de spellingscategorieën die bij dit woord horen:
-                </p>
-                <div id="category-container" class="category-grid"></div>
+            <!-- Gecentreerde Woordwerkruimte (Sterk vereenvoudigd!) -->
+            <div class="workspace-area-center">
+                <div class="interactive-word-wrapper">
+                    <span id="samenstelling-star-indicator" class="star-indicator">⭐</span>
+                    <div id="interactive-word-container" class="word-letters-grid">
+                        <!-- Letters, badges en haklijnen worden hier samen in 1 div opgebouwd -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-bar-center">
+                <button id="check-btn" onclick="controleerAntwoord()">Controleer Antwoord! ✔️</button>
+                <button id="next-btn" onclick="volgendWoord()" style="display:none; background-color: #4caf50; box-shadow: 0 4px 0 #388e3c; color: white;">Volgend woord ➡️</button>
+            </div>
+
+            <div id="feedback-box" class="feedback"></div>
+
+            <!-- Onderste Categoriebalk -->
+            <div class="bottom-scroll-column">
+                <div class="bottom-toolbar">
+                    <button id="samenstelling-toggle-btn" class="samenstelling-btn" onclick="toggleSamenstelling()">⭐ Samenstelling</button>
+                    <p style="color: white; font-weight: bold; margin: 0; font-size: 14px;">
+                        Klik op de spellingscategorieën:
+                    </p>
+                </div>
+                <div class="grid-container-multiline">
+                    <div id="category-container" class="category-grid-multiline"></div>
+                </div>
             </div>
 
         </div>
@@ -124,7 +99,8 @@
 </div>
 
 <script src="config.js"></script>
-<script src="keyboard.js"></script>
+<script src="ui.js"></script>
+<script src="checker.js"></script>
 <script src="game.js"></script>
 
 </body>

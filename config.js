@@ -1,4 +1,3 @@
-// Officiële namen van de Staal-categorieën (1 t/m 28)
 const staalCategorieMapping = {
     1: "Hakwoord", 2: "Zingwoord", 3: "Luchtwoord", 4: "Plankwoord",
     5: "Eer-oor-eur-woord", 6: "Aai-ooi-oei-woord", 7: "Eeuw-ieuw-woord", 8: "Langermaakwoord",
@@ -11,7 +10,28 @@ const staalCategorieMapping = {
 
 const MAX_WOORDEN_PER_RONDE = 20;
 
-// Functie die de exacte CSS-achtergrondpositie berekent uit de Heutink-afbeelding
+function bepaalMaxCategorie(groep, blok) {
+    if (groep === 4) {
+        if (blok <= 2) return 3;
+        if (blok <= 4) return 6;
+        if (blok <= 6) return 9;
+        return 12;
+    }
+    if (groep === 5) {
+        if (blok <= 2) return 14;
+        if (blok <= 4) return 16;
+        if (blok <= 6) return 18;
+        return 19;
+    }
+    if (groep === 6) {
+        if (blok <= 2) return 21;
+        if (blok <= 4) return 24;
+        if (blok <= 6) return 26;
+        return 28;
+    }
+    return 12;
+}
+
 function getSpriteStyle(num) {
     const imgUrl = "categoriekaart.webp";
     let left, top, width, height;

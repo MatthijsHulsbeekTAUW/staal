@@ -1,1 +1,72 @@
-"Hallo! Ik wil graag verder werken aan mijn Staal Spelling-app voor basisscholen (groep 4, 5 en 6).We hebben de app opgesplitst in een index.html (met een split-screen layout: links opdrachten, rechts de categoriekaart) en een script.js. De woordenlijsten (100 per groep) staan in drie losse bestanden (groep4.json, groep5.json, groep6.json) die via een fetch() asynchroon worden geladen op basis van de gekozen groep.We gebruiken de echte categoriekaart van Heutink (heutink.nlproductsprod/images/100/614747-3.jpg) via een CSS-sprite met automatische wiskundige offset-berekeningen in JavaScript voor de 28 poppetjes. Het spel heeft een oefenmodus en dicteemodus (via Web Speech API) en gebruikt een positief beloningssysteem (50pt spelling, 30pt categorieën, 20pt klankgroepen, 50pt bonus + een ⭐ ster bij een foutloze ronde).Ik geef je nu de code van mijn index.html en script.js zodat je exact weet hoe we ervoor staan. [PLAK HIER JE CODE]. Mijn volgende doel of vraag is: [VUL HIER JE VRAAG VAN MORGEN IN]."
+======================================================================
+PROMPT & ARCHITECTUUR DOCUMENT: STAAL SPELLINGSOEFENAAR (OEFENMODUS)
+======================================================================
+
+1. ALGEMENE BESCHRIJVING & DIDACTIEK
+------------------------------------
+Deze web-app is een interactief oefenplatform gebaseerd op de spellingmethode "Staal" voor groep 4, 5 en 6. De focus ligt momenteel op een geoptimaliseerde 'Oefenmodus' voor tablets (Chromebooks/iPads) waarbij traditioneel typen is vervangen door directe motorische interactie. 
+
+Didactische regels in de app:
+- Gewone woorden: Het kind kiest de juiste categorieën voor het gehele woord. Hakken is uitgeschakeld.
+- Samenstellingen: Geactiveerd via een grote ster-knop (⭐). Het kind MOET het woord eerst via een hakstreep splitsen in twee losse grondwoorden. Pas daarna kunnen categorieën per woorddeel (Deel 1 = Blauw, Deel 2 = Groen) onafhankelijk worden toegewezen door simpelweg op de letters van dat deel te klikken.
+
+2. TECHNISCHE STRUCTUUR (BESTANDEN OP GITHUB)
+----------------------------------------------
+De app is modulair opgebouwd om codeblokken klein en onderhoudbaar te houden:
+- staal.html   : De structuur (Intake-scherm en Spelscherm in een horizontale flow).
+- style.css    : Alle opmaak, flexboxen en grid-systemen.
+- config.js    : Bevat de vaste categorie-namen, blokstaffels en sprite-berekeningen.
+- game.js      : De kern (opstarten, asynchroon JSON laden, localStorage, spelcyclus).
+- ui.js        : Visuele laag (bouwen van de multiline-kaart en interactieve lettervakjes).
+- checker.js   : Reken- en nakijklogica (diepe foutenanalyse en puntentelling).
+- categoriekaart.webp : Lokale afbeelding van de fysieke Staal-kaart.
+- groep[4/5/6].json   : De woordenlijsten (valide JSON-arrays).
+
+3. KEY FEATURES & LOGICA
+------------------------
+- Fullscreen API: Bij het starten van het spel opent de app automatisch in F11-modus om afleiding te voorkomen.
+- Persistentie: De spelersnaam, gekozen groep en het actieve blok (1 t/m 8) worden opgeslagen in localStorage en bij herladen automatisch vooringevuld. Ook het Persoonlijk Record (High Score) blijft bewaard.
+- Schermtoetsenbord Onderdrukking: Alle letter-interactie verloopt via kliks/taps, waardoor het onhandige virtuele tablet-toetsenbord nooit omhoog schiet.
+- Vaste Cyclus: Een speelronde duurt exact 20 woorden (of korter als de gefilterde JSON minder woorden bevat).
+- Blokken-filtering: Op basis van Groep + Blok (1 t/m 8) berekent `config.js` de maximale aangeleerde categorie. Woorden uit de JSON die hogere (onbekende) categorieën bevatten, worden automatisch uit de speelronde gefilterd. Ook de kaart onderaan toont alleen de bekende categorieën.
+
+4. SPECIFIEKE FRONT-END OPLOSSINGEN
+------------------------------------
+- CSS Sprite Categorieën: Om te voorkomen dat 28 losse plaatjes geladen moeten worden, berekent `getSpriteStyle(num)` in config.js via wiskundige percentages live een bounding-box uitsnede uit de lokale afbeelding `categoriekaart.webp`.
+- Categorieën over 3 Regels: De categoriekaart onderaan is via een CSS Grid (`grid-template-rows: repeat(3, 1fr); grid-auto-flow: column;`) verdeeld over exact 3 strakke, horizontale regels.
+- Relatieve Badge-uitlijning: Geselecteerde badges staan niet in een losse laag, maar worden via JavaScript fysiek *binnen* het laatste lettervakje van een woorddeel geïnjecteerd (`letterBox.appendChild(badgesContainer)`). Met CSS `position: absolute` zweven ze hierdoor ALTIJD muurvast en perfect gecentreerd boven het einde van het woorddeel, gescheiden door een komma (`,`).
+- Didactische Validatie-kleuren: De hakstreep is standaard BLAUW. Na het nakijken kleurt de lijn GROEN (indien correct) of ROOD (indien fout). Foutief gekozen categoriekaarten onderaan krijgen de klasse `.wrong-selection` en kleuren direct vuurrood.
+
+5. JSON DATA-STRUCTUUR (100% VALIDE JSON)
+------------------------------------------
+Woordenlijsten moeten exact aan deze opbouw voldoen. Arrays mogen NOOIT leeg gelaten worden met losse komma's.
+
+Gewoon woord:
+{
+  "woord": "jager",
+  "klankgroepen": "ja-ger",
+  "categorieen":,
+  "samenstelling": false
+}
+
+Samenstelling (Array-structuur voor de delen):
+{
+  "woord": "zaklamp",
+  "klankgroepen": "zak-lamp",
+  "categorieen":,
+  "samenstelling": true,
+  "delen": [
+    { "woord": "zak", "klankgroepen": "zak", "categorieen": [1] },
+    { "woord": "lamp", "klankgroepen": "lamp", "categorieen": [4] }
+  ]
+}
+
+6. POSITIEF BELONINGSSYSTEEM (PUNTENTELLING)
+--------------------------------------------
+Per woord zijn er maximaal 150 punten te verdienen (opgebouwd via beloningen):
+- Samenstelling goed gekozen / gesplitst : +30 punten
+- Categorieën per (deel)woord correct   : +40 punten
+- Klankgroepen/Hakstreep correct gezet   : +30 punten
+- Foutloze Bonus (Alles in 1x goed)     : +50 punten én een Gouden Ster (⭐) op het scorebord.
+Bij een foutje verliest het kind geen punten, maar krijgt het gewoon de punten voor de onderdelen die wel goed waren. De feedbackbox geeft een gedetailleerde analyse (bijv. "je bent categorie X vergeten" of "je hebt categorie Y te veel aangeklikt").
+======================================================================
