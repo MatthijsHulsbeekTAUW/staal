@@ -23,6 +23,8 @@ function bouwCategorieKaart() {
 }
 
 function selecteerCategorieCard(nummer) {
+    if (gameState.isGecontroleerd) return;
+
     let actieveLijst = gameState.huidigWoordDeelIndex === 0 ? gameState.categorieenDeel0 : gameState.categorieenDeel1;
 
     if (actieveLijst.includes(nummer)) {
@@ -39,9 +41,13 @@ function selecteerCategorieCard(nummer) {
 }
 
 function updateKaartGeselecteerdeStaten() {
+    if (gameState.isGecontroleerd) return;
+
     document.querySelectorAll('.cat-card').forEach(el => {
         el.classList.remove('selected');
         el.classList.remove('wrong-selection');
+        el.classList.remove('missing-selection');
+        el.classList.remove('correct-selection');
     });
     let actieveLijst = gameState.huidigWoordDeelIndex === 0 ? gameState.categorieenDeel0 : gameState.categorieenDeel1;
     actieveLijst.forEach(num => {
@@ -51,6 +57,8 @@ function updateKaartGeselecteerdeStaten() {
 }
 
 function toggleSamenstelling() {
+    if (gameState.isGecontroleerd) return;
+
     const btn = document.getElementById('samenstelling-toggle-btn');
     const star = document.getElementById('samenstelling-star-indicator');
     
@@ -82,15 +90,19 @@ function renderInteractiefWoord() {
     const woord = huidigeWoorden[woordIndex].woord;
     const letters = woord.split("");
     
-    let grensIndex = gameState.isSamenstellingGekozen && gameState.actieveHakStrepen.length > 0 ? gameState.actieveHakStrepen[0] : -1;
+    let grensIndex = -1;
+    if (gameState.isGecontroleerd && window.analyseResult && window.analyseResult.isSamenstelling) {
+        grensIndex = window.analyseResult.grensIndexEcht;
+    } else if (gameState.isSamenstellingGekozen && gameState.actieveHakStrepen.length > 0) {
+        grensIndex = gameState.actieveHakStrepen[0];
+    }
 
-    console.log('grensIndex:', grensIndex, 'categorieenDeel0:', gameState.categorieenDeel0);
     letters.forEach((letter, index) => {
         const letterBox = document.createElement('div');
         letterBox.className = "letter-box";
         letterBox.innerText = letter;
         
-        if (gameState.isSamenstellingGekozen) {
+        if (gameState.isSamenstellingGekozen && !gameState.isGecontroleerd) {
             if (grensIndex !== -1) {
                 if (index <= grensIndex) {
                     letterBox.style.backgroundColor = gameState.huidigWoordDeelIndex === 0 ? "#e0f2fe" : "#f1f5f9";
@@ -116,35 +128,67 @@ function renderInteractiefWoord() {
             letterBox.classList.add('active-part');
         }
 
+        // Bepaal welke categorieën en analyse horen bij dit vakje
         let actieveLijstVoorDitVakje = [];
+        let analyseVoorDitVakje = null;
 
-        if (gameState.isSamenstellingGekozen && grensIndex !== -1) {
-            if (index === grensIndex) { actieveLijstVoorDitVakje = gameState.categorieenDeel0; }
-            if (index === letters.length - 1) { actieveLijstVoorDitVakje = gameState.categorieenDeel1; }
+        if (gameState.isGecontroleerd && window.analyseResult) {
+            if (window.analyseResult.isSamenstelling) {
+                if (index === window.analyseResult.grensIndexEcht) {
+                    actieveLijstVoorDitVakje = gameState.categorieenDeel0;
+                    analyseVoorDitVakje = window.analyseResult.deel0;
+                } else if (index === letters.length - 1) {
+                    actieveLijstVoorDitVakje = gameState.isSamenstellingGekozen ? gameState.categorieenDeel1 : gameState.categorieenDeel0;
+                    analyseVoorDitVakje = window.analyseResult.deel1;
+                }
+            } else {
+                if (index === letters.length - 1) {
+                    actieveLijstVoorDitVakje = gameState.categorieenDeel0;
+                    analyseVoorDitVakje = window.analyseResult.deel0;
+                }
+            }
         } else {
-            if (index === letters.length - 1) { actieveLijstVoorDitVakje = gameState.categorieenDeel0; }
+            if (gameState.isSamenstellingGekozen && grensIndex !== -1) {
+                if (index === grensIndex) { actieveLijstVoorDitVakje = gameState.categorieenDeel0; }
+                if (index === letters.length - 1) { actieveLijstVoorDitVakje = gameState.categorieenDeel1; }
+            } else {
+                if (index === letters.length - 1) { actieveLijstVoorDitVakje = gameState.categorieenDeel0; }
+            }
         }
 
-        if (actieveLijstVoorDitVakje && actieveLijstVoorDitVakje.length > 0) {
+        const selectedCats = actieveLijstVoorDitVakje || [];
+        const wrongCats = (analyseVoorDitVakje && analyseVoorDitVakje.teVeel) ? analyseVoorDitVakje.teVeel : [];
+        const missingCats = (analyseVoorDitVakje && analyseVoorDitVakje.teWeinig) ? analyseVoorDitVakje.teWeinig : [];
+
+        if (selectedCats.length > 0 || missingCats.length > 0) {
             const badgesContainer = document.createElement('div');
             badgesContainer.className = "mini-badges-container";
-            
-            // Render the selected categories as badges
-            const result = (typeof window !== 'undefined' && window.analyseResult) ?
-                (index === grensIndex ? window.analyseResult.deel0 :
-                 index === letters.length - 1 ? window.analyseResult.deel1 : null) : null;
 
-            actieveLijstVoorDitVakje.forEach((num, i) => {
-                const badge = document.createElement('div');
-                badge.className = 'mini-staal-badge';
-                // Mark wrong selections (extra categories) red
-                if (result && result.teVeel && result.teVeel.includes(num)) {
-                    badge.classList.add('wrong-selection');
+            const allBadges = [];
+            selectedCats.forEach(num => {
+                let badgeClass = 'mini-staal-badge';
+                if (gameState.isGecontroleerd) {
+                    badgeClass = wrongCats.includes(num) ? 'mini-staal-badge wrong-selection' : 'mini-staal-badge correct-selection';
                 }
-                badge.innerText = num;
+                allBadges.push({
+                    num: num,
+                    className: badgeClass
+                });
+            });
+            missingCats.forEach(num => {
+                allBadges.push({
+                    num: num,
+                    className: 'mini-staal-badge missing-category'
+                });
+            });
+
+            allBadges.forEach((bItem, bIdx) => {
+                const badge = document.createElement('div');
+                badge.className = bItem.className;
+                badge.innerText = bItem.num;
                 badgesContainer.appendChild(badge);
 
-                if (i < actieveLijstVoorDitVakje.length - 1) {
+                if (bIdx < allBadges.length - 1) {
                     const comma = document.createElement('span');
                     comma.className = 'badge-comma';
                     comma.innerText = ',';
@@ -152,63 +196,53 @@ function renderInteractiefWoord() {
                 }
             });
 
-            // Append missing categories (not selected) in a distinct style
-            if (result && result.teWeinig && result.teWeinig.length > 0) {
-                // add a separator if there were selected badges before
-                if (actieveLijstVoorDitVakje.length > 0) {
-                    const sep = document.createElement('span');
-                    sep.className = 'badge-comma';
-                    sep.innerText = ',';
-                    badgesContainer.appendChild(sep);
-                }
-                result.teWeinig.forEach((num, i) => {
-                    const missBadge = document.createElement('div');
-                    missBadge.className = 'mini-staal-badge missing-category';
-                    missBadge.innerText = num;
-                    badgesContainer.appendChild(missBadge);
-                    if (i < result.teWeinig.length - 1) {
-                        const comma = document.createElement('span');
-                        comma.className = 'badge-comma';
-                        comma.innerText = ',';
-                        badgesContainer.appendChild(comma);
-                    }
-                });
-            }
-            
             letterBox.appendChild(badgesContainer);
         }
 
         container.appendChild(letterBox);
 
+        // Splitsingslijnen tussen de letters
         if (index < letters.length - 1) {
             const splitZone = document.createElement('div');
             splitZone.className = "split-zone";
             splitZone.id = `split-zone-${index}`;
-            
-            if (gameState.actieveHakStrepen.includes(index)) {
-                splitZone.classList.add('cut');
-            }
 
             const line = document.createElement('div');
             line.className = "split-line-visual";
             splitZone.appendChild(line);
 
-            if (gameState.isSamenstellingGekozen) {
-                splitZone.classList.add('can-split');
-                splitZone.onclick = () => {
-                    if (gameState.actieveHakStrepen.includes(index)) {
-                        gameState.actieveHakStrepen = [];
-                        gameState.huidigWoordDeelIndex = 0;
-                        document.getElementById('current-instruction').innerHTML = "⭐ Klik tussen de letters om de samenstelling te splitsen.";
-                    } else {
-                        gameState.actieveHakStrepen = [index];
-                        gameState.huidigWoordDeelIndex = 0;
-                    }
-                    renderInteractiefWoord();
-                    updateKaartGeselecteerdeStaten();
-                };
-            } else {
+            if (gameState.isGecontroleerd) {
                 splitZone.style.cursor = "default";
+                if (gameState.hakStreepStatus && gameState.hakStreepStatus.index === index) {
+                    splitZone.classList.add('cut');
+                    if (gameState.hakStreepStatus.correct) {
+                        splitZone.classList.add('correct-cut'); // GROEN
+                    } else {
+                        splitZone.classList.add('wrong-cut');   // ROOD op de plek waar het streepje had moeten staan!
+                    }
+                }
+            } else {
+                if (gameState.actieveHakStrepen.includes(index)) {
+                    splitZone.classList.add('cut');
+                }
+
+                if (gameState.isSamenstellingGekozen) {
+                    splitZone.classList.add('can-split');
+                    splitZone.onclick = () => {
+                        if (gameState.actieveHakStrepen.includes(index)) {
+                            gameState.actieveHakStrepen = [];
+                            gameState.huidigWoordDeelIndex = 0;
+                            document.getElementById('current-instruction').innerHTML = "⭐ Klik tussen de letters om de samenstelling te splitsen.";
+                        } else {
+                            gameState.actieveHakStrepen = [index];
+                            gameState.huidigWoordDeelIndex = 0;
+                        }
+                        renderInteractiefWoord();
+                        updateKaartGeselecteerdeStaten();
+                    };
+                } else {
+                    splitZone.style.cursor = "default";
+                }
             }
 
             container.appendChild(splitZone);

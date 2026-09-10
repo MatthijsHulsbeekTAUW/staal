@@ -202,7 +202,7 @@ input, select {
 }
 
 .split-zone.can-split:hover .split-line-visual { background-color: #ffcc00; }
-.split-zone.cut .split-line-visual { background-color: var(--staal-blue); width: 6px; }
+.split-zone.cut .split-line-visual { background-color: #ffcc00; width: 6px; }
 .split-zone.correct-cut .split-line-visual { background-color: var(--staal-green) !important; width: 6px; }
 .split-zone.wrong-cut .split-line-visual { background-color: var(--staal-red) !important; width: 6px; }
 
@@ -332,14 +332,60 @@ button:active {
 
 .cat-card.selected { border-color: #ffcc00; background-color: #fffde7; }
 .cat-card.selected .cat-number { background-color: #ffcc00; color: white; }
-.cat-card.wrong-selection { border-color: var(--staal-red) !important; background-color: #fee2e2 !important; }
-.mini-badges-container .missing-category {
-    background-color: #fff3cd; /* light yellow */
-    color: #856404; /* dark yellow text */
-    border: 1px solid #ffeeba;
-    border-radius: 4px;
-    padding: 2px 4px;
-    margin-left: 2px;
+
+.cat-card.correct-selection {
+    border-color: var(--staal-green) !important;
+    background-color: #d1fae5 !important;
+}
+.cat-card.correct-selection .cat-number {
+    background-color: var(--staal-green) !important;
+    color: white !important;
+}
+.cat-card.correct-selection .cat-name {
+    color: #065f46 !important;
+}
+
+.cat-card.wrong-selection {
+    border-color: var(--staal-red) !important;
+    background-color: #fee2e2 !important;
+}
+.cat-card.wrong-selection .cat-number {
+    background-color: var(--staal-red) !important;
+    color: white !important;
+}
+.cat-card.wrong-selection .cat-name {
+    color: #991b1b !important;
+}
+
+.cat-card.missing-selection {
+    border: 3px dashed #f97316 !important;
+    background-color: #fff7ed !important;
+}
+.cat-card.missing-selection .cat-number {
+    background-color: #f97316 !important;
+    color: white !important;
+}
+.cat-card.missing-selection .cat-name {
+    color: #c2410c !important;
+}
+
+.mini-staal-badge.correct-selection {
+    background-color: var(--staal-green) !important;
+    box-shadow: 0 3px 0 #059669 !important;
+    color: white !important;
+}
+
+.mini-staal-badge.wrong-selection {
+    background-color: var(--staal-red) !important;
+    box-shadow: 0 3px 0 #b91c1c !important;
+    color: white !important;
+}
+
+.mini-staal-badge.missing-category {
+    background-color: #f97316 !important;
+    box-shadow: 0 3px 0 #c2410c !important;
+    color: white !important;
+    border: 2px dashed #fed7aa !important;
 }
 
 

@@ -9,7 +9,9 @@ let gameState = {
     huidigWoordDeelIndex: 0, // 0 voor deel 1, 1 voor deel 2
     categorieenDeel0: [],     // Gekozen categorieën voor deel 1
     categorieenDeel1: [],     // Gekozen categorieën voor deel 2
-    actieveHakStrepen: []     // Indices van de tussenruimtes waar een streep staat
+    actieveHakStrepen: [],    // Indices van de tussenruimtes waar een streep staat
+    isGecontroleerd: false,
+    hakStreepStatus: null
 };
 
 window.onload = function() {
@@ -93,6 +95,13 @@ function laadWoord() {
     gameState.categorieenDeel0 = [];
     gameState.categorieenDeel1 = [];
     gameState.actieveHakStrepen = [];
+    gameState.isGecontroleerd = false;
+    gameState.hakStreepStatus = null;
+    window.analyseResult = null;
+
+    document.querySelectorAll('.cat-card').forEach(el => {
+        el.classList.remove('selected', 'wrong-selection', 'missing-selection', 'correct-selection');
+    });
 
     document.getElementById('feedback-box').className = "feedback";
     document.getElementById('check-btn').style.display = "inline-block";

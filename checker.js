@@ -4,6 +4,10 @@ function controleerAntwoord() {
     let foutenLijst = [];
     let allesGoed = true;
 
+    // Reset eventuele eerdere foutmarkeringen op kaarten
+    document.querySelectorAll('.cat-card.wrong-selection, .cat-card.missing-selection, .cat-card.correct-selection')
+        .forEach(c => c.classList.remove('wrong-selection', 'missing-selection', 'correct-selection'));
+
     const kindZegtSamenstelling = gameState.isSamenstellingGekozen;
     const isEchtSamenstelling = huidigWoordObj.samenstelling ? true : false;
     
@@ -16,42 +20,58 @@ function controleerAntwoord() {
     }
 
     // 2. Controle van de hakstreep (Alleen verplicht bij samenstelling)
-    if (isEchtSamenstelling && kindZegtSamenstelling) {
-        const letters = huidigWoordObj.woord.split("");
-        let grensIndexEcht = huidigWoordObj.delen[0].woord.length - 1;
-        let grensIndexKind = gameState.actieveHakStrepen.length > 0 ? gameState.actieveHakStrepen[0] : -1;
+    const grensIndexEcht = isEchtSamenstelling && huidigWoordObj.delen ? huidigWoordObj.delen[0].woord.length - 1 : -1;
+    const grensIndexKind = gameState.actieveHakStrepen.length > 0 ? gameState.actieveHakStrepen[0] : -1;
 
-        const zoneElement = document.getElementById(`split-zone-${grensIndexKind}`);
-
-        if (grensIndexKind === grensIndexEcht) {
+    if (isEchtSamenstelling) {
+        if (kindZegtSamenstelling && grensIndexKind === grensIndexEcht) {
             verdiendePunten += 30;
-            if (zoneElement) zoneElement.classList.add('correct-cut'); // EIS: Wordt GROEN
+            gameState.hakStreepStatus = { index: grensIndexEcht, correct: true };
         } else {
             allesGoed = false;
-            foutenLijst.push(`De splitsing klopte niet (moest zijn: **${huidigWoordObj.delen[0].woord} | ${huidigWoordObj.delen[1].woord}**).`);
-            
-            // EIS: Kleur de foute lijn ROOD
-            if (zoneElement) zoneElement.classList.add('wrong-cut');
-            // Kleur de juiste lijn alsnog groen ter verbetering
-            const correctZone = document.getElementById(`split-zone-${grensIndexEcht}`);
-            if (correctZone) correctZone.classList.add('correct-cut');
+            foutenLijst.push(`De splitsing klopte niet.`);
+            // EIS: Rood streepje getoond tussen de letters waar het streepje had moeten staan
+            gameState.hakStreepStatus = { index: grensIndexEcht, correct: false };
         }
     } else {
         verdiendePunten += 30;
+        if (kindZegtSamenstelling && grensIndexKind !== -1) {
+            allesGoed = false;
+            gameState.hakStreepStatus = { index: grensIndexKind, correct: false };
+        } else {
+            gameState.hakStreepStatus = null;
+        }
     }
 
     // 3. Geavanceerde Categorieën Controle met diepe analyse (Te veel / te weinig)
     if (isEchtSamenstelling && kindZegtSamenstelling && huidigWoordObj.delen) {
-        // Perform deep category analysis and store results for UI rendering
         const analyseDeel0 = analyseerCategorieFouten(huidigWoordObj.delen[0].categorieen, gameState.categorieenDeel0, huidigWoordObj.delen[0].woord);
         const analyseDeel1 = analyseerCategorieFouten(huidigWoordObj.delen[1].categorieen, gameState.categorieenDeel1, huidigWoordObj.delen[1].woord);
-        // Store results globally so UI can access missing/extra categories
-        window.analyseResult = { deel0: analyseDeel0, deel1: analyseDeel1 };
+        window.analyseResult = {
+            isSamenstelling: true,
+            grensIndexEcht: grensIndexEcht,
+            deel0: analyseDeel0,
+            deel1: analyseDeel1
+        };
         if (analyseDeel0.correct) { verdiendePunten += 20; } else { allesGoed = false; foutenLijst.push(analyseDeel0.bericht); }
         if (analyseDeel1.correct) { verdiendePunten += 20; } else { allesGoed = false; foutenLijst.push(analyseDeel1.bericht); }
+    } else if (isEchtSamenstelling && !kindZegtSamenstelling && huidigWoordObj.delen) {
+        const alleCorrecteCategorieen = huidigWoordObj.categorieen || [...(huidigWoordObj.delen[0].categorieen || []), ...(huidigWoordObj.delen[1].categorieen || [])];
+        const analyseGewoon = analyseerCategorieFouten(alleCorrecteCategorieen, gameState.categorieenDeel0, huidigWoordObj.woord);
+        window.analyseResult = {
+            isSamenstelling: false,
+            grensIndexEcht: grensIndexEcht,
+            deel0: analyseGewoon
+        };
+        allesGoed = false;
     } else {
         // Gewoon woord checken
         const analyseGewoon = analyseerCategorieFouten(huidigWoordObj.categorieen, gameState.categorieenDeel0, huidigWoordObj.woord);
+        window.analyseResult = {
+            isSamenstelling: false,
+            grensIndexEcht: -1,
+            deel0: analyseGewoon
+        };
         if (analyseGewoon.correct) { verdiendePunten += 40; } else { allesGoed = false; foutenLijst.push(analyseGewoon.bericht); }
     }
 
@@ -77,20 +97,9 @@ function controleerAntwoord() {
     categoryLabel.classList.remove('validation-error');
     categoryLabel.innerHTML = 'Klik op de spellingscategorieën:';
 
-    if (allesGoed) {
-        // Success – nothing else (error classes already cleared)
-    } else {
-        // Show error highlighting
-        wordContainer.classList.add('validation-error');
-        categoryLabel.classList.add('validation-error');
-
-        // Append missing‑category messages (those containing “vergeten”) to the label
-        const missingMsgs = foutenLijst.filter(msg => msg.includes('vergeten'));
-        if (missingMsgs.length) {
-            const missingSpans = missingMsgs.map(msg => `<span class="missing-category">${msg}</span>`).join(' ');
-            categoryLabel.innerHTML = `Klik op de spellingscategorieën: ${missingSpans}`;
-        }
-    }
+    // Markeer gecontroleerd en render interactief woord voor visuele feedback
+    gameState.isGecontroleerd = true;
+    renderInteractiefWoord();
 
     document.getElementById('check-btn').style.display = "none";
     document.getElementById('samenstelling-toggle-btn').style.display = "none";
@@ -104,24 +113,33 @@ function analyseerCategorieFouten(correcteLijst, gekozenLijst, woordLabel) {
 
     const teWeinig = correctUnique.filter(x => !gekozenUnique.includes(x));
     const teVeel = gekozenUnique.filter(x => !correctUnique.includes(x));
+    const goedGekozen = gekozenUnique.filter(x => correctUnique.includes(x));
+
+    // Highlight correct categories (green)
+    goedGekozen.forEach(num => {
+        const card = document.getElementById(`cat-card-${num}`);
+        if (card) card.classList.add('correct-selection');
+    });
 
     // Highlight wrong categories (extra selections)
     teVeel.forEach(num => {
         const card = document.getElementById(`cat-card-${num}`);
-        if (card) card.classList.add('wrong-selection');
+        if (card) {
+            card.classList.remove('correct-selection');
+            card.classList.add('wrong-selection');
+        }
     });
 
     // Highlight missing categories (not selected)
     teWeinig.forEach(num => {
         const card = document.getElementById(`cat-card-${num}`);
-        if (card) card.classList.add('missing-selection');
+        if (card && !card.classList.contains('correct-selection') && !card.classList.contains('wrong-selection')) {
+            card.classList.add('missing-selection');
+        }
     });
 
     if (teWeinig.length === 0 && teVeel.length === 0) {
-        // Remove previous error markings
-        document.querySelectorAll('.cat-card.wrong-selection, .cat-card.missing-selection')
-            .forEach(c => c.classList.remove('wrong-selection', 'missing-selection'));
-        return { correct: true, teWeinig: [], teVeel: [] };
+        return { correct: true, teWeinig: [], teVeel: [], goedGekozen };
     }
 
     let bericht = `Categorieën bij **${woordLabel}** kloppen niet: `;
@@ -137,5 +155,5 @@ function analyseerCategorieFouten(correcteLijst, gekozenLijst, woordLabel) {
     }
 
     bericht += subBerichten.join(' én ');
-    return { correct: false, bericht, teWeinig, teVeel };
+    return { correct: false, bericht, teWeinig, teVeel, goedGekozen };
 }
