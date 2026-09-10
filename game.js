@@ -24,6 +24,17 @@ window.onload = function() {
     document.getElementById('high-score-display').innerText = `🏆 Persoonlijk Record: ${opgeslagenHighScore} punten`;
 };
 
+window.toggleFullScreen = function() {
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) { elem.requestFullscreen(); }
+        else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
+    } else {
+        if (document.exitFullscreen) { document.exitFullscreen(); }
+        else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+    }
+};
+
 async function startSpel() {
     const naamInput = document.getElementById('student-name').value.trim();
     if (!naamInput) return alert("Vul eerst je naam in!");
@@ -38,10 +49,10 @@ async function startSpel() {
     localStorage.setItem('staal_groep', speler.groep);
     localStorage.setItem('staal_blok', speler.blok);
 
-    // Fullscreen (F11-effect) inschakelen
-    const elem = document.documentElement;
-    if (elem.requestFullscreen) { elem.requestFullscreen(); }
-    else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
+    // Fullscreen (F11-effect) inschakelen als dit nog niet aan staat
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        toggleFullScreen();
+    }
 
     let ruweWoordenlijst = [];
     try {
@@ -97,7 +108,6 @@ function laadWoord() {
 
     renderInteractiefWoord();
     updateKaartGeselecteerdeStaten();
-    renderCategorieBadgesBovenWoord();
 }
 
 function volgendWoord() {

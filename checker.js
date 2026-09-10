@@ -42,12 +42,12 @@ function controleerAntwoord() {
 
     // 3. Geavanceerde Categorieën Controle met diepe analyse (Te veel / te weinig)
     if (isEchtSamenstelling && kindZegtSamenstelling && huidigWoordObj.delen) {
-        // Deel 1 checken
+        // Perform deep category analysis and store results for UI rendering
         const analyseDeel0 = analyseerCategorieFouten(huidigWoordObj.delen[0].categorieen, gameState.categorieenDeel0, huidigWoordObj.delen[0].woord);
-        if (analyseDeel0.correct) { verdiendePunten += 20; } else { allesGoed = false; foutenLijst.push(analyseDeel0.bericht); }
-
-        // Deel 2 checken
         const analyseDeel1 = analyseerCategorieFouten(huidigWoordObj.delen[1].categorieen, gameState.categorieenDeel1, huidigWoordObj.delen[1].woord);
+        // Store results globally so UI can access missing/extra categories
+        window.analyseResult = { deel0: analyseDeel0, deel1: analyseDeel1 };
+        if (analyseDeel0.correct) { verdiendePunten += 20; } else { allesGoed = false; foutenLijst.push(analyseDeel0.bericht); }
         if (analyseDeel1.correct) { verdiendePunten += 20; } else { allesGoed = false; foutenLijst.push(analyseDeel1.bericht); }
     } else {
         // Gewoon woord checken
@@ -66,14 +66,30 @@ function controleerAntwoord() {
     document.getElementById('display-stars').innerText = "⭐ " + sterrenTeller;
 
     const feedbackBox = document.getElementById('feedback-box');
+    const wordContainer = document.getElementById('interactive-word-container');
+    const categoryLabel = document.getElementById('category-label');
+
+    // Hide old feedback box
+    feedbackBox.style.display = 'none';
+
+    // Reset previous error state
+    wordContainer.classList.remove('validation-error');
+    categoryLabel.classList.remove('validation-error');
+    categoryLabel.innerHTML = 'Klik op de spellingscategorieën:';
+
     if (allesGoed) {
-        feedbackBox.className = "feedback correct";
-        feedbackBox.innerHTML = `🎉 **UITSTEKEND!** Alles is helemaal goed gedaan!<br>⭐ Je verdient **+${verdiendePunten} punten**!`;
+        // Success – nothing else (error classes already cleared)
     } else {
-        feedbackBox.className = "feedback wrong";
-        let feedbackTekst = `👍 Goed geprobeerd! Je scoort **+${verdiendePunten} punten**.<br><br>Kijk goed naar de foutenanalyse:<br>`;
-        foutenLijst.forEach(fout => { feedbackTekst += `• ${fout}<br>`; });
-        feedbackBox.innerHTML = feedbackTekst;
+        // Show error highlighting
+        wordContainer.classList.add('validation-error');
+        categoryLabel.classList.add('validation-error');
+
+        // Append missing‑category messages (those containing “vergeten”) to the label
+        const missingMsgs = foutenLijst.filter(msg => msg.includes('vergeten'));
+        if (missingMsgs.length) {
+            const missingSpans = missingMsgs.map(msg => `<span class="missing-category">${msg}</span>`).join(' ');
+            categoryLabel.innerHTML = `Klik op de spellingscategorieën: ${missingSpans}`;
+        }
     }
 
     document.getElementById('check-btn').style.display = "none";
@@ -89,14 +105,23 @@ function analyseerCategorieFouten(correcteLijst, gekozenLijst, woordLabel) {
     const teWeinig = correctUnique.filter(x => !gekozenUnique.includes(x));
     const teVeel = gekozenUnique.filter(x => !correctUnique.includes(x));
 
-    // EIS: Vuurrode kleur toewijzen aan de foute kaarten op de kaart onderaan
+    // Highlight wrong categories (extra selections)
     teVeel.forEach(num => {
         const card = document.getElementById(`cat-card-${num}`);
         if (card) card.classList.add('wrong-selection');
     });
 
+    // Highlight missing categories (not selected)
+    teWeinig.forEach(num => {
+        const card = document.getElementById(`cat-card-${num}`);
+        if (card) card.classList.add('missing-selection');
+    });
+
     if (teWeinig.length === 0 && teVeel.length === 0) {
-        return { correct: true };
+        // Remove previous error markings
+        document.querySelectorAll('.cat-card.wrong-selection, .cat-card.missing-selection')
+            .forEach(c => c.classList.remove('wrong-selection', 'missing-selection'));
+        return { correct: true, teWeinig: [], teVeel: [] };
     }
 
     let bericht = `Categorieën bij **${woordLabel}** kloppen niet: `;
@@ -112,5 +137,5 @@ function analyseerCategorieFouten(correcteLijst, gekozenLijst, woordLabel) {
     }
 
     bericht += subBerichten.join(' én ');
-    return { correct: false, bericht: bericht };
+    return { correct: false, bericht, teWeinig, teVeel };
 }

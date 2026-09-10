@@ -38,7 +38,7 @@ body {
 .screen { display: none; height: 100%; }
 .screen.active { display: block; }
 
-#screen-intake { text-align: center; padding-top: 10vh; }
+#screen-intake { text-align: center; padding-top: 2vh; overflow-y: auto; }
 
 input, select {
     padding: 10px;
@@ -201,10 +201,29 @@ input, select {
     border-radius: 2px;
 }
 
-.split-zone:hover .split-line-visual { background-color: #ffcc00; }
+.split-zone.can-split:hover .split-line-visual { background-color: #ffcc00; }
 .split-zone.cut .split-line-visual { background-color: var(--staal-blue); width: 6px; }
 .split-zone.correct-cut .split-line-visual { background-color: var(--staal-green) !important; width: 6px; }
 .split-zone.wrong-cut .split-line-visual { background-color: var(--staal-red) !important; width: 6px; }
+
+/* Algemene knop stijl */
+button {
+    background-color: var(--staal-blue);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #007bb3;
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+
+button:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 transparent;
+}
 
 /* Onderste Categoriebalk */
 .bottom-scroll-column {
@@ -225,15 +244,16 @@ input, select {
 
 .samenstelling-btn {
     background-color: #fff;
-    border: 3px solid #ffcc00;
+    border: 3px solid #ccc;
     color: var(--staal-dark);
-    box-shadow: 0 4px 0 #ffcc00;
+    box-shadow: 0 4px 0 #ccc;
     padding: 6px 15px;
     font-size: 15px;
     margin: 0;
 }
 .samenstelling-btn.active {
     background-color: #ffcc00;
+    border: 3px solid #ffcc00;
     color: white;
     box-shadow: 0 4px 0 #cc9900;
 }
@@ -313,7 +333,15 @@ input, select {
 .cat-card.selected { border-color: #ffcc00; background-color: #fffde7; }
 .cat-card.selected .cat-number { background-color: #ffcc00; color: white; }
 .cat-card.wrong-selection { border-color: var(--staal-red) !important; background-color: #fee2e2 !important; }
-.cat-card.wrong-selection .cat-number { background-color: var(--staal-red) !important; color: white !important; }
+.mini-badges-container .missing-category {
+    background-color: #fff3cd; /* light yellow */
+    color: #856404; /* dark yellow text */
+    border: 1px solid #ffeeba;
+    border-radius: 4px;
+    padding: 2px 4px;
+    margin-left: 2px;
+}
+
 
 .action-bar-center { margin: 5px 0; text-align: center; }
 .feedback { padding: 8px; border-radius: 8px; font-weight: bold; display: none; font-size: 13px; }

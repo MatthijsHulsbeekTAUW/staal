@@ -82,8 +82,9 @@ function renderInteractiefWoord() {
     const woord = huidigeWoorden[woordIndex].woord;
     const letters = woord.split("");
     
-    let grensIndex = gameState.isSamenstellingGekozen && gameState.actieveHakStrepen.length > 0 ? gameState.actieveHakStrepen : -1;
+    let grensIndex = gameState.isSamenstellingGekozen && gameState.actieveHakStrepen.length > 0 ? gameState.actieveHakStrepen[0] : -1;
 
+    console.log('grensIndex:', grensIndex, 'categorieenDeel0:', gameState.categorieenDeel0);
     letters.forEach((letter, index) => {
         const letterBox = document.createElement('div');
         letterBox.className = "letter-box";
@@ -128,19 +129,51 @@ function renderInteractiefWoord() {
             const badgesContainer = document.createElement('div');
             badgesContainer.className = "mini-badges-container";
             
+            // Render the selected categories as badges
+            const result = (typeof window !== 'undefined' && window.analyseResult) ?
+                (index === grensIndex ? window.analyseResult.deel0 :
+                 index === letters.length - 1 ? window.analyseResult.deel1 : null) : null;
+
             actieveLijstVoorDitVakje.forEach((num, i) => {
                 const badge = document.createElement('div');
-                badge.className = "mini-staal-badge";
+                badge.className = 'mini-staal-badge';
+                // Mark wrong selections (extra categories) red
+                if (result && result.teVeel && result.teVeel.includes(num)) {
+                    badge.classList.add('wrong-selection');
+                }
                 badge.innerText = num;
                 badgesContainer.appendChild(badge);
 
                 if (i < actieveLijstVoorDitVakje.length - 1) {
                     const comma = document.createElement('span');
-                    comma.className = "badge-comma";
-                    comma.innerText = ",";
+                    comma.className = 'badge-comma';
+                    comma.innerText = ',';
                     badgesContainer.appendChild(comma);
                 }
             });
+
+            // Append missing categories (not selected) in a distinct style
+            if (result && result.teWeinig && result.teWeinig.length > 0) {
+                // add a separator if there were selected badges before
+                if (actieveLijstVoorDitVakje.length > 0) {
+                    const sep = document.createElement('span');
+                    sep.className = 'badge-comma';
+                    sep.innerText = ',';
+                    badgesContainer.appendChild(sep);
+                }
+                result.teWeinig.forEach((num, i) => {
+                    const missBadge = document.createElement('div');
+                    missBadge.className = 'mini-staal-badge missing-category';
+                    missBadge.innerText = num;
+                    badgesContainer.appendChild(missBadge);
+                    if (i < result.teWeinig.length - 1) {
+                        const comma = document.createElement('span');
+                        comma.className = 'badge-comma';
+                        comma.innerText = ',';
+                        badgesContainer.appendChild(comma);
+                    }
+                });
+            }
             
             letterBox.appendChild(badgesContainer);
         }
@@ -161,6 +194,7 @@ function renderInteractiefWoord() {
             splitZone.appendChild(line);
 
             if (gameState.isSamenstellingGekozen) {
+                splitZone.classList.add('can-split');
                 splitZone.onclick = () => {
                     if (gameState.actieveHakStrepen.includes(index)) {
                         gameState.actieveHakStrepen = [];
